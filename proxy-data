@@ -1,0 +1,31 @@
+const url = new URL(location.href);
+const file = url.searchParams.get("file");
+
+fetch(`https://github.com/CatGuy798/CatGuy798.github.io/releases/download/tag1/bog.data`)
+  .then(r => r.body)
+  .then(body => {
+    const reader = body.getReader();
+    return new Response(
+      new ReadableStream({
+        start(controller) {
+          function push() {
+            reader.read().then(({ done, value }) => {
+              if (done) {
+                controller.close();
+                return;
+              }
+              controller.enqueue(value);
+              push();
+            });
+          }
+          push();
+        }
+      })
+    );
+  })
+  .then(response => response.blob())
+  .then(blob => {
+    const headers = new Headers();
+    headers.set("Content-Type", "application/octet-stream");
+    return new Response(blob, { headers });
+  });
